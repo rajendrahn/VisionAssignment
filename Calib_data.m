@@ -1,0 +1,103 @@
+function Calib_data()
+
+    f2D = [];
+    f3D = [];
+    %Load the 2D and 3D points from the mat files
+    load('Features2D_dataset1.mat','f2D');
+    load('Features3D_dataset1.mat', 'f3D');
+    M = caliberate(f2D, f3D);
+    
+    disp('M for Data set 1:')
+    disp(M)
+    
+    %Verification
+    disp('Verifying')
+    verification(f2D, f3D, M)
+    
+    %Load the 2D and 3D points from the mat files
+    load('Features2D_dataset2.mat','f2D');
+    load('Features3D_dataset2.mat', 'f3D');
+    M = caliberate(f2D, f3D);
+    
+    disp('M for Data set 2:')
+    disp(M)
+    
+    %Verification
+    disp('Verifying')
+    verification(f2D, f3D, M)
+    
+    %Adding Noise to Dataset1
+    %Load the 2D and 3D points from the mat files
+    load('Features2D_dataset1.mat','f2D');
+    load('Features3D_dataset1.mat', 'f3D');
+    
+    maximum = max(f3D(:));
+    sd = 0.05*maximum;
+    
+    noise = randn(2, size(f2D,2)) * sd;
+    noise = [noise;zeros(1,size(f2D,2))];
+    f2D = f2D + noise;
+    
+    noise = randn(3, size(f3D,2)) * sd;
+    noise = [noise;zeros(1,size(f3D,2))];
+    f3D = f3D + noise;
+    
+    M = caliberate(f2D, f3D);
+    
+    disp('M for noisy Data set 1:')
+    disp(M)
+    
+    %Verification
+    disp('Verifying')
+    verification(f2D, f3D, M)
+    
+end
+
+
+function verification(f2D, f3D, M) 
+    %Verification is done on the first point
+    X=f3D(:,1); %Get 3D point
+    x=f2D(:,1); %Get 2D expected Point
+    xx = (M(1,:)*X)/(M(3,:)*X); %Calculate the 2D point
+    xy = (M(2,:)*X)/(M(3,:)*X);
+
+    %Displaying the result
+    disp('--------------------');
+    disp('input');
+    disp(x(1));
+    disp('output');
+    disp(xx);
+
+    disp('input');
+    disp(x(2));
+    disp('output');
+    disp(xy);
+end
+
+%function calculate the calibration matrix using 2D and 3D points provided
+function M = caliberate(f2D, f3D)
+N = size(f2D,2);
+A = zeros(2*N, 12);
+
+%Create Matrix A to solve for M in the equation AM = 0
+
+for i = 1:N
+    Xi = f3D(:,i);
+    xi = f2D(:,i);
+    
+    A(i*2 - 1,:) = [ -Xi(1), -Xi(2), -Xi(3), -Xi(4), 0, 0, 0, 0, Xi(1)*xi(1), Xi(2)*xi(1), Xi(3)*xi(1), Xi(4)*xi(1) ];
+    A(i*2,:) = [ 0, 0, 0, 0, -Xi(1), -Xi(2), -Xi(3), -Xi(4), Xi(1)*xi(2), Xi(2)*xi(2), Xi(3)*xi(2), Xi(4)*xi(2) ];
+    
+end
+    
+
+%Get SVD of A and get the last element in V corresponding to smallest
+%singular value
+
+[~,~,V] = svd(A);
+
+M = V(:,end);
+M = reshape(M,4,3);
+M = M';
+
+end
