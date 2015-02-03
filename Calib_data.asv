@@ -56,14 +56,24 @@ end
 
 function verification(f2D, f3D, M) 
     result = M*f3D;
-    for i = 1:size(f3D,2)
-        result(1,i) =result(1, i) / result(3, i);
-        result(2,i) =result(2, i) / result(3, i);
-        result(3,i) = 1;
-    end
     
-    disp('error in the result is:');
-    disp(norm(f2D-result));
+    %Verification is done on the first point
+    X=f3D(:,1); %Get 3D point
+    x=f2D(:,1); %Get 2D expected Point
+    xx = (M(1,:)*X)/(M(3,:)*X); %Calculate the 2D point
+    xy = (M(2,:)*X)/(M(3,:)*X);
+
+    %Displaying the result
+    disp('--------------------');
+    disp('input');
+    disp(x(1));
+    disp('output');
+    disp(xx);
+
+    disp('input');
+    disp(x(2));
+    disp('output');
+    disp(xy);
 end
 
 %function calculate the calibration matrix using 2D and 3D points provided
